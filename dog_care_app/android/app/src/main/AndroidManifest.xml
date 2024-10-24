@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="dog_care_app"
+        android:label="dog_shit"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

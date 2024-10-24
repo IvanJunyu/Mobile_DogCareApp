@@ -1,7 +1,9 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'db_helper.dart';
+import 'database_help.dart';
+import 'dart:async';
+import 'dart:convert';   
+import 'setting_page.dart';
+import 'sick_dog_screen.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -9,116 +11,338 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  late Timer foodTimer, waterTimer, playTimer, walkTimer;
-  Duration foodCountdown = Duration(hours: 24);
-  Duration waterCountdown = Duration(hours: 24);
-  Duration playCountdown = Duration(hours: 24);
-  Duration walkCountdown = Duration(hours: 24);
-  int foodSupply = 0;
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  Map<String, dynamic>? petData;
+  Timer? _foodTimer, _waterTimer, _playTimer, _walkTimer;
+  int _foodTime = 0, _waterTime = 0, _playTime = 0, _walkTime = 0;
+  Image? petImage;
 
   @override
   void initState() {
     super.initState();
-    _initNotifications();
-    _loadData();
-    _startCountdownTimers();
+    _loadPetData();
   }
 
-  Future<void> _initNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('app_icon');
-
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
-  Future<void> _loadData() async {
-    final data = await DBHelper.getData('PetCare');
-    if (data.isNotEmpty) {
+  Future<void> _loadPetData() async {
+    petData = await DatabaseHelper.getPetData();
+    if (petData != null) {
       setState(() {
-        foodSupply = data[0]['foodSupply'];
+        _foodTime = petData!['foodPeriod'] * 60;
+        _waterTime = petData!['waterPeriod'] * 60;
+        _playTime = petData!['playPeriod'] * 60;
+        _walkTime = petData!['walkPeriod'] * 60;
+        _loadPetImage();  
       });
+      _startTimers();
     }
   }
 
-  void _startCountdownTimers() {
-    foodTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+  void _loadPetImage() {
+    if (petData!['image'] != null) {
+      final bytes = base64Decode(petData!['image']);
+      petImage = Image.memory(bytes, height: 150);   
+    }
+  }
+
+  void _startTimers() {
+    _foodTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
-        if (foodCountdown.inSeconds > 0) {
-          foodCountdown = foodCountdown - Duration(seconds: 1);
-        } else {
-          _showNotification("Food time has reached 0!");
-          foodTimer.cancel();
+        if (_foodTime > 0) {
+          _foodTime--;
         }
       });
     });
 
-    // Similar setup for waterTimer, playTimer, walkTimer
+    _waterTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_waterTime > 0) {
+          _waterTime--;
+        }
+      });
+    });
+
+    _playTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_playTime > 0) {
+          _playTime--;
+        }
+      });
+    });
+
+    _walkTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_walkTime > 0) {
+          _walkTime--;
+        }
+      });
+    });
   }
 
-  void _resetTimer(Timer timer, Duration countdown) {
-    timer.cancel();
-    setState(() {
-      countdown = Duration(hours: 24); // Reset to 24 hours
-    });
-    _startCountdownTimers();
-  }
+  String _getPetState() {
+    bool isHungry = _foodTime == 0;
+    bool isThirsty = _waterTime == 0;
+    bool isBored = _playTime == 0 || _walkTime == 0;
 
-  void _decrementFoodSupply() {
-    setState(() {
-      foodSupply--;
-    });
-    if (foodSupply == 3) {
-      _showNotification("Food supply is low, please restock soon!");
-    } else if (foodSupply == 0) {
-      _showNotification("Out of food! Please buy more immediately!");
+    if (isHungry && isThirsty && isBored) {
+      return '${petData!['name']} needs care now!!';
+    } else if (isHungry && isThirsty) {
+      return '${petData!['name']} is hungry and thirsty';
+    } else if (isHungry && isBored) {
+      return '${petData!['name']} is hungry and bored';
+    } else if (isThirsty && isBored) {
+      return '${petData!['name']} is thirsty and bored';
+    } else if (isHungry) {
+      return '${petData!['name']} is hungry';
+    } else if (isThirsty) {
+      return '${petData!['name']} is thirsty';
+    } else if (isBored) {
+      return '${petData!['name']} is bored';
+    } else {
+      return '${petData!['name']} is happy!';
     }
   }
 
-  Future<void> _showNotification(String message) async {
-  const AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails(
-    'your_channel_id', // Channel ID
-    'your_channel_name', // Channel Name
-    channelDescription: 'your_channel_description', // Channel Description
-    importance: Importance.max,
-    priority: Priority.high,
-    showWhen: false,
-  );
+  Future<void> _showRandomTip() async {
+    String tip = await DatabaseHelper.getRandomDogTip();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(tip)),
+    );
+  }
 
-  const NotificationDetails platformChannelSpecifics = NotificationDetails(
-    android: androidPlatformChannelSpecifics,
-  );
+  void _resetTimer(String timerType) async {
+    Map<String, dynamic> mutablePetData = Map<String, dynamic>.from(petData!);
 
-  await flutterLocalNotificationsPlugin.show(
-    0, // Notification ID
-    'Pet Care Reminder', // Notification Title
-    message, // Notification Body
-    platformChannelSpecifics, // Platform-specific notification details
-  );
-}
+    switch (timerType) {
+      case 'food':
+        setState(() {
+          _foodTime = mutablePetData['foodPeriod'] * 60;
+          if (mutablePetData['foodLeft'] > 0) {
+            mutablePetData['foodLeft'] -= 1;
+          } else {
+            _showOutOfFoodMessage();
+          }
+        });
+        await DatabaseHelper.updatePetData(mutablePetData);
+        petData = mutablePetData;
+        break;
+      case 'water':
+        setState(() {
+          _waterTime = mutablePetData['waterPeriod'] * 60;
+        });
+        break;
+      case 'play':
+        setState(() {
+          _playTime = mutablePetData['playPeriod'] * 60;
+        });
+        break;
+      case 'walk':
+        setState(() {
+          _walkTime = mutablePetData['walkPeriod'] * 60;
+        });
+        break;
+    }
+  }
+
+  void _showOutOfFoodMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('No food left! Please refill.')),
+    );
+  }
+
+  Future<void> _resetSettings() async {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => SettingPage()),
+    );
+  }
+
+  Future<void> _addFood() async {
+    int? additionalFood = await _showAddFoodDialog();
+
+    if (additionalFood != null && additionalFood > 0) {
+      Map<String, dynamic> mutablePetData = Map<String, dynamic>.from(petData!);
+      setState(() {
+        mutablePetData['foodLeft'] += additionalFood;
+      });
+      await DatabaseHelper.updatePetData(mutablePetData);
+      petData = mutablePetData;
+    }
+  }
+
+  Future<int?> _showAddFoodDialog() async {
+    TextEditingController _foodController = TextEditingController();
+
+    return showDialog<int>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Add Food'),
+          content: TextField(
+            controller: _foodController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(labelText: 'Enter amount of food to add'),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              child: Text('Add'),
+              onPressed: () {
+                int? additionalFood = int.tryParse(_foodController.text);
+                if (additionalFood != null) {
+                  Navigator.of(context).pop(additionalFood);
+                } else {
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _navigateToSickDogScreen() {
+    if (petData != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SickDogScreen(dogName: petData!['name']),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (petData == null) return Scaffold(body: Center(child: CircularProgressIndicator()));
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pet Care Dashboard'),
+        title: Text('${petData!['name']}\'s Care'),
+        elevation: 0,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Text('Food Countdown: ${foodCountdown.inHours}:${foodCountdown.inMinutes.remainder(60)}:${foodCountdown.inSeconds.remainder(60)}'),
-          ElevatedButton(onPressed: () => _resetTimer(foodTimer, foodCountdown), child: Text('Reset Food Timer')),
-          // Similar UI for Water, Play, and Walk Countdown
-          SizedBox(height: 20),
-          Text('Food Supply: $foodSupply'),
-          ElevatedButton(onPressed: _decrementFoodSupply, child: Text('Use One Food')),
+          Column(
+            children: [
+              
+Padding(
+  padding: const EdgeInsets.all(16.0),
+  child: Column(
+    children: [
+      SizedBox(height: 25),  
+      Text(
+        'Welcome, ${petData!['name']}!',
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      ),
+    ],
+  ),
+),
+
+
+              if (petImage != null) petImage!,  
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  _getPetState(),  
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+                ),
+              ),
+
+               _buildCountdown('Food Timer', _foodTime, 'food', Icons.fastfood),
+              _buildCountdown('Water Timer', _waterTime, 'water', Icons.local_drink),
+              _buildCountdown('Play Timer', _playTime, 'play', Icons.sports_soccer),
+              _buildCountdown('Walk Timer', _walkTime, 'walk', Icons.directions_walk),
+
+               Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: ElevatedButton(
+                  onPressed: _navigateToSickDogScreen,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                    textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  child: Text('My Dog is Sick'),
+                ),
+              ),
+            ],
+          ),
+
+           Positioned(
+            top: -10,
+            right: 16,
+            child: Row(
+              children: [
+                Text('Food Left: ${petData!['foodLeft']}'),
+                IconButton(
+                 onPressed: _addFood,
+                icon: Icon(Icons.add_circle, size: 25, color: Colors.green),
+                ),
+              ],
+            ),
+          ),
+
+           Positioned(
+            top: -10,
+            left: 16,
+            child: IconButton(
+              onPressed: _resetSettings,
+              icon: Icon(Icons.settings),
+            ),
+          ),
+          Positioned(
+            top: 15,
+            right: 16,
+             child: Row(
+              children: [
+                Text('Get tips'),
+                IconButton(
+                 onPressed: _showRandomTip,
+                icon: Icon(Icons.lightbulb_circle, size: 25, color: Colors.yellow),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildCountdown(String title, int timeLeft, String timerType, IconData icon) {
+   int hours = timeLeft ~/ 3600;
+  int minutes = (timeLeft % 3600) ~/ 60;
+  int seconds = timeLeft % 60;
+
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: Card(
+      color: Colors.grey[300],
+      child: ListTile(
+        leading: Icon(icon, color: Colors.blue),
+        title: Text(title),
+         subtitle: Text(
+          '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}',
+        ),
+        trailing: ElevatedButton(
+          onPressed: () => _resetTimer(timerType),
+          child: Text('Reset'),
+        ),
+      ),
+    ),
+  );
+}
+
+
+  @override
+  void dispose() {
+    _foodTimer?.cancel();
+    _waterTimer?.cancel();
+    _playTimer?.cancel();
+    _walkTimer?.cancel();
+    super.dispose();
   }
 }
