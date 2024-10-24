@@ -115,9 +115,15 @@ class _MainPageState extends State<MainPage> {
       case 'food':
         setState(() {
           _foodTime = mutablePetData['foodPeriod'] * 60;
-          if (mutablePetData['foodLeft'] > 0) {
+          if (mutablePetData['foodLeft'] > 4) {
             mutablePetData['foodLeft'] -= 1;
-          } else {
+          } else if(mutablePetData['foodLeft'] > 1){
+            _showLessFoodMessage();
+            mutablePetData['foodLeft'] -= 1;
+          }else if(mutablePetData['foodLeft'] == 1){
+            _showOutOfFoodMessage();
+            mutablePetData['foodLeft'] -= 1;
+          }else{
             _showOutOfFoodMessage();
           }
         });
@@ -145,6 +151,12 @@ class _MainPageState extends State<MainPage> {
   void _showOutOfFoodMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('No food left! Please refill.')),
+    );
+  }
+
+    void _showLessFoodMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Less food left! Please consider refill.')),
     );
   }
 
@@ -236,7 +248,7 @@ Padding(
     children: [
       SizedBox(height: 25),  
       Text(
-        'Welcome, ${petData!['name']}!',
+        'Best Care For ${petData!['name']}!',
         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
       ),
     ],
