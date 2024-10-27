@@ -33,10 +33,10 @@ class _SettingPageState extends State<SettingPage> {
   if (petData != null) {
     setState(() {
       _nameController.text = petData['name'] ?? '';
-       _foodPeriodController.text = (petData['foodPeriod'] ~/ 60).toString();  
-      _waterPeriodController.text = (petData['waterPeriod'] ~/ 60).toString();  
-      _playPeriodController.text = (petData['playPeriod'] ~/ 60).toString();  
-      _walkPeriodController.text = (petData['walkPeriod'] ~/ 60).toString();  
+       _foodPeriodController.text = (petData['foodPeriod'] ~/60).toString();  
+      _waterPeriodController.text = (petData['waterPeriod'] ~/60).toString();  
+      _playPeriodController.text = (petData['playPeriod'] ~/60).toString();  
+      _walkPeriodController.text = (petData['walkPeriod'] ~/60).toString();  
       _foodLeftController.text = petData['foodLeft'].toString();
     });
   } else {
@@ -63,9 +63,9 @@ class _SettingPageState extends State<SettingPage> {
      final petData = {
       'id': 1,   
       'name': _nameController.text,
-      'foodPeriod': int.parse(_foodPeriodController.text) * 60,
-      'waterPeriod': int.parse(_waterPeriodController.text) * 60,
-      'playPeriod': int.parse(_playPeriodController.text) * 60,
+      'foodPeriod': int.parse(_foodPeriodController.text) *60,
+      'waterPeriod': int.parse(_waterPeriodController.text) *60,
+      'playPeriod': int.parse(_playPeriodController.text) *60,
       'walkPeriod': int.parse(_walkPeriodController.text) * 60,
       'foodLeft': int.parse(_foodLeftController.text),
       'image': _imageBase64,
@@ -175,7 +175,7 @@ class _SettingPageState extends State<SettingPage> {
                   child: Text('Choose Image for Pet'),
                   style: ElevatedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),  // Button style
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
@@ -183,8 +183,8 @@ class _SettingPageState extends State<SettingPage> {
                   Padding(
                     padding: const EdgeInsets.only(top: 20),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),  // Rounded image preview
-                      child: Image.file(_selectedImage!, height: 150),  // Show selected image
+                      borderRadius: BorderRadius.circular(12),  
+                      child: Image.file(_selectedImage!, height: 150),  
                     ),
                   ),
                 SizedBox(height: 20),
@@ -195,10 +195,10 @@ class _SettingPageState extends State<SettingPage> {
                       onPressed: _submitData,
                       child: Text('Submit'),
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                        textStyle: TextStyle(fontSize: 18),  // Bigger font size
+                        padding: EdgeInsets.symmetric(vertical: 5, horizontal: 24),
+                        textStyle: TextStyle(fontSize: 18),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),  // Rounded button
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),

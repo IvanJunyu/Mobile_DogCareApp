@@ -271,11 +271,11 @@ Padding(
               _buildCountdown('Walk Timer', _walkTime, 'walk', Icons.directions_walk),
 
                Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 14.0),
                 child: ElevatedButton(
                   onPressed: _navigateToSickDogScreen,
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical:4),
                     textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   child: Text('My Dog is Sick'),
@@ -325,7 +325,7 @@ Padding(
   }
 
   Widget _buildCountdown(String title, int timeLeft, String timerType, IconData icon) {
-   int hours = timeLeft ~/ 3600;
+  int hours = timeLeft ~/ 3600;
   int minutes = (timeLeft % 3600) ~/ 60;
   int seconds = timeLeft % 60;
 
