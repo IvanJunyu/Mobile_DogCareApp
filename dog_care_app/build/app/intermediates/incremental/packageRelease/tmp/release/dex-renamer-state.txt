@@ -1,0 +1,4 @@
+#Sat Oct 26 22:28:14 EDT 2024
+base.0=C\:\\Users\\ly\\Desktop\\mobile\\project\\p1\\Mobile_DogCareApp\\dog_care_app\\build\\app\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
