@@ -275,7 +275,7 @@ Padding(
                 child: ElevatedButton(
                   onPressed: _navigateToSickDogScreen,
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical:4),
+                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 5),
                     textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   child: Text('My Dog is Sick'),
@@ -325,7 +325,7 @@ Padding(
   }
 
   Widget _buildCountdown(String title, int timeLeft, String timerType, IconData icon) {
-  int hours = timeLeft ~/ 3600;
+   int hours = timeLeft ~/ 3600;
   int minutes = (timeLeft % 3600) ~/ 60;
   int seconds = timeLeft % 60;
 

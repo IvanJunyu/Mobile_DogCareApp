@@ -1,4 +1,4 @@
-# dog_shit
+# dog_app
 
 A new Flutter project.
 

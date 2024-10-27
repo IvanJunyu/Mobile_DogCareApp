@@ -1,12 +1,12 @@
 <lint-module
     format="1"
-    dir="C:\Users\ly\Desktop\mobile\project\p1\Mobile_DogCareApp\dog_care_app\android\app"
+    dir="C:\Users\ekail\Desktop\MobileDev\p1\Mobile_DogCareApp_1\New folder\dog_app\android\app"
     name=":app"
     type="APP"
     maven="android:app:"
     agpVersion="8.1.0"
-    buildFolder="C:\Users\ly\Desktop\mobile\project\p1\Mobile_DogCareApp\dog_care_app\build\app"
-    bootClassPath="C:\Users\ly\AppData\Local\Android\sdk\platforms\android-34\android.jar;C:\Users\ly\AppData\Local\Android\sdk\build-tools\33.0.1\core-lambda-stubs.jar"
+    buildFolder="C:\Users\ekail\Desktop\MobileDev\p1\Mobile_DogCareApp_1\New folder\dog_app\build\app"
+    bootClassPath="C:\Users\ekail\AppData\Local\Android\sdk\platforms\android-34\android.jar;C:\Users\ekail\AppData\Local\Android\sdk\build-tools\33.0.1\core-lambda-stubs.jar"
     javaSourceLevel="1.8"
     compileTarget="android-34">
   <lintOptions
